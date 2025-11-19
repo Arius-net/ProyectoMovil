@@ -29,7 +29,6 @@ fun HomeScreen() {
         bottomBar = { BottomNavigationBar() }
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
-            // Fondo degradado superior
             Box(
                 modifier = Modifier
                     .fillMaxWidth()

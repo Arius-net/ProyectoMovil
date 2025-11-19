@@ -6,6 +6,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.sayd.notaudio.ui.Screens.HomeScreen
 import com.sayd.notaudio.ui.Screens.RegisterScreen
+//import com.sayd.notaudio.ui.Screens.LoginScreen
+import com.sayd.notaudio.ui.Screens.RecordatorioScreen
+
 
 @Composable
 fun NavGraph() {
@@ -16,6 +19,14 @@ fun NavGraph() {
         }
         composable("home") {
             HomeScreen()
+        }
+
+//        composable("login") {
+//            LoginScreen()
+//        }
+
+        composable("recordatorios"){
+            RecordatorioScreen()
         }
     }
 }
