@@ -58,6 +58,8 @@ import com.sayd.notaudio.ui.theme.NotaudioTheme
 
 @Composable
 fun AllNotesScreen(navController: NavController) {
+    var searchQuery by remember { mutableStateOf("") }
+
     Scaffold(
         containerColor = Color(0xFFF0F0F0),
         bottomBar = { AllNotesBottomNavigationBar(navController) }
@@ -86,8 +88,8 @@ fun AllNotesScreen(navController: NavController) {
             }
             item {
                 OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
                     placeholder = { Text("Buscar notas...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier.fillMaxWidth(),
