@@ -1,5 +1,6 @@
 package com.sayd.notaudio.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sayd.notaudio.data.model.Nota
@@ -13,25 +14,33 @@ import kotlinx.coroutines.launch
 class HomeViewModel(private val repository: NoteRepository) : ViewModel() {
 
     // RF3: Lista de notas obtenida de Firestore en tiempo real (Flow)
-    val notes: StateFlow<List<Nota>> = repository.getNotes().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    val notes: StateFlow<List<Nota>> = repository.getNotes()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     // RF6: Estado para la frase motivacional diaria
     private val _dailyQuote = MutableStateFlow("Cargando motivación...")
     val dailyQuote: StateFlow<String> = _dailyQuote
 
     init {
+        Log.d("HomeViewModel", "HomeViewModel inicializado")
         fetchDailyQuote()
     }
 
     // RF6: Llama a Cloud Functions
     private fun fetchDailyQuote() {
         viewModelScope.launch {
-            val quote = repository.getDailyQuote()
-            _dailyQuote.value = quote
+            try {
+                val quote = repository.getDailyQuote()
+                _dailyQuote.value = quote
+                Log.d("HomeViewModel", "Frase del día cargada: $quote")
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error al cargar frase del día", e)
+                _dailyQuote.value = "¡Hoy es un gran día para ser productivo!"
+            }
         }
     }
 

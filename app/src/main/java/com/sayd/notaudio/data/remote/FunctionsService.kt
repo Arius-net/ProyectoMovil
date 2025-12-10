@@ -1,8 +1,8 @@
 package com.sayd.notaudio.data.remote
 
+import com.google.firebase.Firebase
 import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.ktx.functions
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.functions.functions
 import kotlinx.coroutines.tasks.await
 
 class FunctionsService {
@@ -11,20 +11,20 @@ class FunctionsService {
     // RF6: Obtiene la frase motivacional diaria del Cloud Function
     suspend fun getMotivacionalQuote(): String {
         return try {
-            // Llama a la función 'obtenerFraseMotivacional' que desplegaste
+            // Llama a la función 'obtenerFraseMotivacional'
             val result = functions
                 .getHttpsCallable("obtenerFraseMotivacional")
-                .call() // No necesita parámetros de entrada
-                .await() // Espera el resultado de la llamada
+                .call()
+                .await()
 
             // El resultado es un Map, extraemos el campo 'fraseMotivacional'
             val quoteData = result.data as? Map<String, Any>
             quoteData?.get("fraseMotivacional") as? String
-                ?: "Error al parsear la frase motivacional."
+                ?: "Error al obtener la frase." // Mensaje de fallo si el parseo falla
 
         } catch (e: Exception) {
             // RNF9: Maneja fallas de conexión o errores en la función
-            "¡Hoy tú tienes el control! Organiza tus pendientes con tu voz."
+            "¡Organiza tus pendientes y toma el control de tu día!" // Mensaje por defecto
         }
     }
 }

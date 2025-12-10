@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "5431963330",
+    "project_id": "notapp-b4cb5",
+    "storage_bucket": "notapp-b4cb5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:5431963330:android:358fcd2fd19650ee27d55b",
+        "android_client_info": {
+          "package_name": "com.sayd.notaudio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi3xOVn4yciNDcn6QtmQnI0nW1QD9lsxM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

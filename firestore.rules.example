@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Reglas para la colección de notas
+    match /notas/{noteId} {
+      // Permitir lectura solo si el usuario está autenticado
+      // y la nota pertenece al usuario actual
+      allow read: if request.auth != null &&
+                     resource.data.userId == request.auth.uid;
+
+      // Permitir creación solo si el usuario está autenticado
+      // y el userId del documento coincide con el usuario autenticado
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid;
+
+      // Permitir actualización solo si el usuario está autenticado
+      // y es el dueño de la nota
+      allow update: if request.auth != null &&
+                       resource.data.userId == request.auth.uid;
+
+      // Permitir eliminación solo si el usuario está autenticado
+      // y es el dueño de la nota
+      allow delete: if request.auth != null &&
+                       resource.data.userId == request.auth.uid;
+    }
+
+    // REGLAS TEMPORALES DE PRUEBA (SOLO PARA DESARROLLO)
+    // Descomenta estas líneas para probar si el problema son los permisos
+    // IMPORTANTE: No uses estas reglas en producción
+    /*
+    match /notas/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    */
+  }
+}
+

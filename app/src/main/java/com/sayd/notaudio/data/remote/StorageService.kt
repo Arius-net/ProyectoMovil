@@ -1,12 +1,10 @@
 package com.sayd.notaudio.data.remote
 
-
 import android.net.Uri
-import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.ktx.storage
+import com.google.firebase.Firebase
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 import java.io.File
-
 
 class StorageService {
     private val storage = Firebase.storage

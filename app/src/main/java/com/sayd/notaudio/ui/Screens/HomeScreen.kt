@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
@@ -25,12 +26,15 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -39,6 +43,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,17 +56,53 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.sayd.notaudio.data.model.Nota
 import com.sayd.notaudio.ui.theme.NotaudioTheme
+import com.sayd.notaudio.viewmodel.AuthViewModel
+import com.sayd.notaudio.viewmodel.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.MaterialTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(
+    onLogout: () -> Unit,
+    onNavigateToNewTextNote: () -> Unit,
+    onNavigateToNewVoiceNote: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onNavigateToReminders: () -> Unit,
+    onNavigateToAllNotes: () -> Unit
+) {
+    val homeViewModel: HomeViewModel = koinViewModel()
+    val authViewModel: AuthViewModel = koinViewModel()
+
+    val notes by homeViewModel.notes.collectAsState()
+    val dailyQuote by homeViewModel.dailyQuote.collectAsState()
+
     var searchQuery by remember { mutableStateOf("") }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Mi Diario", fontWeight = FontWeight.Bold, color = Color(0xFF6A1B9A)) },
+                actions = {
+                    IconButton(onClick = {
+                        authViewModel.logout()
+                        onLogout()
+                    }) {
+                        Icon(Icons.Filled.ExitToApp, contentDescription = "Cerrar Sesión")
+                    }
+                }
+            )
+        },
         containerColor = Color(0xFFF0F0F0),
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = { HomeBottomNavigationBar(
+            onNavigateToHome = { /* Ya estamos aquí */ },
+            onNavigateToReminders = onNavigateToReminders,
+            onNavigateToAllNotes = onNavigateToAllNotes,
+            onNavigateToSettings = onNavigateToSettings
+        ) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -71,13 +112,7 @@ fun HomeScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                Spacer(modifier = Modifier.height(32.dp))
-                Text(
-                    text = "Mi Diario",
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6A1B9A)
-                )
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Bienvenido de nuevo",
                     fontSize = 14.sp,
@@ -87,12 +122,12 @@ fun HomeScreen(navController: NavController) {
             }
 
             item {
-                QuoteOfTheDayCard()
+                QuoteOfTheDayCard(dailyQuote)
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
             item {
-                ActionButtons(navController)
+                ActionButtons(onNavigateToNewTextNote, onNavigateToNewVoiceNote)
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
@@ -113,7 +148,10 @@ fun HomeScreen(navController: NavController) {
             }
 
             item {
-                MyNotesSection()
+                MyNotesSection(
+                    notes = notes,
+                    onDeleteNote = { note -> homeViewModel.deleteNote(note) }
+                )
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
@@ -121,7 +159,7 @@ fun HomeScreen(navController: NavController) {
 }
 
 @Composable
-fun QuoteOfTheDayCard() {
+fun QuoteOfTheDayCard(quote: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
@@ -144,7 +182,7 @@ fun QuoteOfTheDayCard() {
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "La escritura es la pintura de la voz.",
+                    text = quote,
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -154,10 +192,13 @@ fun QuoteOfTheDayCard() {
 }
 
 @Composable
-fun ActionButtons(navController: NavController) {
+fun ActionButtons(
+    onNavigateToNewTextNote: () -> Unit,
+    onNavigateToNewVoiceNote: () -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Button(
-            onClick = { navController.navigate("new_text_note") },
+            onClick = onNavigateToNewTextNote,
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -178,7 +219,7 @@ fun ActionButtons(navController: NavController) {
             }
         }
         Button(
-            onClick = { navController.navigate("new_voice_note") },
+            onClick = onNavigateToNewVoiceNote,
             modifier = Modifier.fillMaxWidth().height(50.dp),
             shape = RoundedCornerShape(50.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -202,25 +243,8 @@ fun ActionButtons(navController: NavController) {
 }
 
 @Composable
-fun SearchBar() {
-    var text by remember { mutableStateOf("") }
-    OutlinedTextField(
-        value = text,
-        onValueChange = { text = it },
-        modifier = Modifier.fillMaxWidth(),
-        placeholder = { Text("Buscar notas...") },
-        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        shape = RoundedCornerShape(50.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedTextColor = Color.Black,
-            unfocusedTextColor = Color.Black
-        )
-    )
-}
-
-@Composable
-fun MyNotesSection() {
-    Column(modifier = Modifier.fillMaxWidth()) {
+fun MyNotesSection(notes: List<Nota>, onDeleteNote: (Nota) -> Unit) {
+    Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -231,36 +255,86 @@ fun MyNotesSection() {
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
-            Text(text = "0 notas", fontSize = 14.sp, color = Color.Gray)
+            Text(text = "${notes.size} notas", fontSize = 14.sp, color = Color.Gray)
         }
         Spacer(modifier = Modifier.height(16.dp))
         Card(
-            modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp),
+            modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MenuBook,
-                    contentDescription = null,
-                    tint = Color.Gray,
-                    modifier = Modifier.size(48.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Aún no tienes notas",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "Comienza creando tu primera nota",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
+            if (notes.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MenuBook,
+                        contentDescription = null,
+                        tint = Color.Gray,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Aún no tienes notas",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "Comienza creando tu primera nota",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+            } else {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    notes.take(5).forEach { note ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = note.titulo ?: "Nota sin título",
+                                    fontWeight = FontWeight.Medium
+                                )
+                                if (note.audioUrl.isNotEmpty()) {
+                                    Text(
+                                        text = "Nota de voz • ${note.duracion}s",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Nota de texto",
+                                        fontSize = 12.sp,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = { onDeleteNote(note) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFFEBEE)
+                                )
+                            ) {
+                                Text("Eliminar", color = Color(0xFFD32F2F))
+                            }
+                        }
+                    }
+                    if (notes.size > 5) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "y ${notes.size - 5} notas más...",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
             }
         }
     }
@@ -268,7 +342,12 @@ fun MyNotesSection() {
 
 
 @Composable
-fun BottomNavigationBar(navController: NavController) {
+fun HomeBottomNavigationBar(
+    onNavigateToHome: () -> Unit,
+    onNavigateToReminders: () -> Unit,
+    onNavigateToAllNotes: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
     var selectedIndex by remember { mutableStateOf(0) }
     NavigationBar(
         containerColor = Color.White,
@@ -278,9 +357,9 @@ fun BottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Home, contentDescription = null) },
             label = { Text("Inicio") },
             selected = selectedIndex == 0,
-            onClick = { 
+            onClick = {
                 selectedIndex = 0
-                navController.navigate("home") 
+                onNavigateToHome()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -294,9 +373,9 @@ fun BottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
             label = { Text("Recordatorios") },
             selected = selectedIndex == 1,
-            onClick = { 
+            onClick = {
                 selectedIndex = 1
-                navController.navigate("reminders")
+                onNavigateToReminders()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -310,9 +389,9 @@ fun BottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Description, contentDescription = null) },
             label = { Text("Notas") },
             selected = selectedIndex == 2,
-            onClick = { 
+            onClick = {
                 selectedIndex = 2
-                navController.navigate("all_notes")
+                onNavigateToAllNotes()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -326,9 +405,9 @@ fun BottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Person, contentDescription = null) },
             label = { Text("Perfil") },
             selected = selectedIndex == 3,
-            onClick = { 
+            onClick = {
                 selectedIndex = 3
-                navController.navigate("settings")
+                onNavigateToSettings()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -346,6 +425,13 @@ fun BottomNavigationBar(navController: NavController) {
 @Composable
 fun HomeScreenPreview() {
     NotaudioTheme {
-        HomeScreen(rememberNavController())
+        HomeScreen(
+            onLogout = {},
+            onNavigateToNewTextNote = {},
+            onNavigateToNewVoiceNote = {},
+            onNavigateToSettings = {},
+            onNavigateToReminders = {},
+            onNavigateToAllNotes = {}
+        )
     }
 }

@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -34,6 +34,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,13 +53,41 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sayd.notaudio.ui.theme.NotaudioTheme
 import com.sayd.notaudio.utils.NotificationHelper
+import com.sayd.notaudio.viewmodel.NewNoteViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun NewTextNoteScreen(onBackClick: () -> Unit) {
+fun NewTextNoteScreen(onNavigateBack: () -> Unit) {
+    val viewModel: NewNoteViewModel = koinViewModel() // Inject ViewModel
+
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     val context = LocalContext.current
     val notificationHelper = remember { NotificationHelper(context) }
+
+    val isSaving by viewModel.isSaving.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Efecto para navegar de regreso cuando termine de guardar exitosamente
+    var shouldNavigateBack by remember { mutableStateOf(false) }
+    LaunchedEffect(isSaving, errorMessage) {
+        if (!isSaving && shouldNavigateBack && errorMessage == null) {
+            try {
+                kotlinx.coroutines.delay(300) // Pequeño delay para evitar crash
+                notificationHelper.showNotification("Nota guardada", "La nota de texto ha sido guardada exitosamente.")
+                kotlinx.coroutines.delay(100)
+                onNavigateBack()
+            } catch (e: Exception) {
+                android.util.Log.e("NewTextNoteScreen", "Error al navegar", e)
+            }
+        } else if (!isSaving && shouldNavigateBack) {
+            val error = errorMessage
+            if (error != null) {
+                notificationHelper.showNotification("Error", error)
+                shouldNavigateBack = false
+            }
+        }
+    }
 
     Scaffold(
         containerColor = Color(0xFFF0F0F0)
@@ -69,8 +100,8 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                     Text(
                         text = "Nueva Nota de Texto",
@@ -81,6 +112,7 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
+            // ... (Campos de texto y UI) ...
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -129,7 +161,7 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
                             OutlinedButton(
                                 onClick = {
                                     notificationHelper.showNotification("Nota cancelada", "La nota de texto ha sido cancelada.")
-                                    onBackClick()
+                                    onNavigateBack()
                                 },
                                 modifier = Modifier.weight(1f).height(50.dp),
                                 shape = RoundedCornerShape(50.dp),
@@ -139,10 +171,17 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
                             }
                             Button(
                                 onClick = {
-                                    notificationHelper.showNotification("Nota guardada", "La nota de texto ha sido guardada exitosamente.")
-                                    onBackClick()
+                                    // Validar que haya contenido
+                                    if (title.isBlank() && content.isBlank()) {
+                                        notificationHelper.showNotification("Error", "La nota no puede estar vacía")
+                                        return@Button
+                                    }
+                                    // Guardar nota de texto usando ViewModel
+                                    shouldNavigateBack = true
+                                    viewModel.saveTextNote(title, content)
                                 },
                                 modifier = Modifier.weight(1f).height(50.dp),
+                                enabled = !isSaving, // Deshabilitar mientras se guarda
                                 shape = RoundedCornerShape(50.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                                 contentPadding = PaddingValues()
@@ -156,7 +195,11 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.Save, contentDescription = "Guardar", tint=Color.White)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Guardar", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = if (isSaving) "Guardando..." else "Guardar",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
@@ -165,7 +208,7 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
-
+            // ... (Consejo) ...
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -196,12 +239,84 @@ fun NewTextNoteScreen(onBackClick: () -> Unit) {
     }
 }
 
+// Implementación de la nota de voz (RF1)
 @Composable
-fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
+fun NewVoiceNoteScreen(onNavigateBack: () -> Unit) {
+    val viewModel: NewNoteViewModel = koinViewModel()
+
     var title by remember { mutableStateOf("") }
     var isRecording by remember { mutableStateOf(false) }
+    var recordingDuration by remember { mutableStateOf(0L) }
+    var audioFile by remember { mutableStateOf<java.io.File?>(null) }
+
     val context = LocalContext.current
     val notificationHelper = remember { NotificationHelper(context) }
+    val audioRecorder = remember { com.sayd.notaudio.utils.AudioRecorder(context) }
+
+    val isSaving by viewModel.isSaving.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
+    // Efecto para navegar de regreso cuando termine de guardar exitosamente
+    var shouldNavigateBack by remember { mutableStateOf(false) }
+    LaunchedEffect(isSaving, errorMessage) {
+        if (!isSaving && shouldNavigateBack && errorMessage == null) {
+            try {
+                kotlinx.coroutines.delay(300)
+                notificationHelper.showNotification("Nota guardada", "La nota de voz ha sido guardada exitosamente.")
+                kotlinx.coroutines.delay(100)
+                onNavigateBack()
+            } catch (e: Exception) {
+                android.util.Log.e("NewVoiceNoteScreen", "Error al navegar", e)
+            }
+        } else if (!isSaving && shouldNavigateBack) {
+            val error = errorMessage
+            if (error != null) {
+                notificationHelper.showNotification("Error", error)
+                shouldNavigateBack = false
+            }
+        }
+    }
+
+    // Solicitar permisos
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            notificationHelper.showNotification(
+                "Permiso denegado",
+                "Se requiere permiso de grabación de audio"
+            )
+        }
+    }
+
+    // Timer para actualizar la duración
+    androidx.compose.runtime.LaunchedEffect(isRecording) {
+        if (isRecording) {
+            while (isRecording) {
+                kotlinx.coroutines.delay(1000)
+                recordingDuration = audioRecorder.getRecordingDuration()
+                // Máximo 5 minutos (300 segundos)
+                if (recordingDuration >= 300) {
+                    isRecording = false
+                    audioFile = audioRecorder.stopRecording()
+                    notificationHelper.showNotification(
+                        "Grabación detenida",
+                        "Se alcanzó el límite de 5 minutos"
+                    )
+                }
+            }
+        }
+    }
+
+    // Limpiar recursos al salir
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            if (audioRecorder.isRecording()) {
+                audioRecorder.stopRecording()
+            }
+            audioRecorder.release()
+        }
+    }
 
     Scaffold(
         containerColor = Color(0xFFF0F0F0)
@@ -214,8 +329,8 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
                     }
                     Text(
                         text = "Nueva Nota de Voz",
@@ -264,13 +379,44 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = if (isRecording) "Grabando..." else "Presiona para grabar",
+                                text = if (isRecording) {
+                                    "Grabando... ${recordingDuration}s"
+                                } else if (audioFile != null) {
+                                    "Grabación lista (${recordingDuration}s)"
+                                } else {
+                                    "Presiona para grabar"
+                                },
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 16.sp
                             )
                             Spacer(modifier = Modifier.height(24.dp))
                             Button(
-                                onClick = { isRecording = !isRecording },
+                                onClick = {
+                                    // P-G1: Solicitar permiso RECORD_AUDIO
+                                    if (!com.sayd.notaudio.utils.PermissionHelper.hasRecordAudioPermission(context)) {
+                                        permissionLauncher.launch(com.sayd.notaudio.utils.PermissionHelper.RECORD_AUDIO_PERMISSION)
+                                        return@Button
+                                    }
+
+                                    // P-G2: Iniciar o detener grabación
+                                    if (isRecording) {
+                                        // Detener grabación
+                                        audioFile = audioRecorder.stopRecording()
+                                        isRecording = false
+                                    } else {
+                                        // Iniciar grabación por 5 segundos
+                                        val file = audioRecorder.startRecording()
+                                        if (file != null) {
+                                            isRecording = true
+                                            recordingDuration = 0
+                                        } else {
+                                            notificationHelper.showNotification(
+                                                "Error",
+                                                "No se pudo iniciar la grabación"
+                                            )
+                                        }
+                                    }
+                                },
                                 shape = RoundedCornerShape(50.dp),
                                 modifier = Modifier.height(50.dp).padding(horizontal=32.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -296,7 +442,7 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
                             OutlinedButton(
                                 onClick = {
                                     notificationHelper.showNotification("Nota cancelada", "La nota de voz ha sido cancelada.")
-                                    onBackClick()
+                                    onNavigateBack()
                                 },
                                 modifier = Modifier.weight(1f).height(50.dp),
                                 shape = RoundedCornerShape(50.dp),
@@ -306,11 +452,19 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
                             }
                             Button(
                                 onClick = {
-                                    notificationHelper.showNotification("Nota guardada", "La nota de voz ha sido guardada exitosamente.")
-                                    onBackClick()
+                                    // P-G2: Guardar nota con archivo de audio en Firebase Storage
+                                    if (audioFile != null && audioFile!!.exists()) {
+                                        shouldNavigateBack = true
+                                        viewModel.saveNewNote(audioFile!!, title, recordingDuration)
+                                    } else {
+                                        notificationHelper.showNotification(
+                                            "Error",
+                                            "No hay grabación para guardar."
+                                        )
+                                    }
                                 },
                                 modifier = Modifier.weight(1f).height(50.dp),
-                                enabled = isRecording,
+                                enabled = !isRecording && audioFile != null && !isSaving, // Deshabilitar mientras graba o guarda
                                 shape = RoundedCornerShape(50.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                                 contentPadding = PaddingValues(),
@@ -320,14 +474,18 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
                                         .fillMaxSize()
                                         .background(
                                             brush = Brush.horizontalGradient(listOf(Color(0xFF8E24AA), Color(0xFF42A5F5))),
-                                            alpha = if (isRecording) 1f else 0.4f
+                                            alpha = if (!isRecording && audioFile != null && !isSaving) 1f else 0.4f
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.Save, contentDescription = "Guardar", tint = Color.White)
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Guardar", color = Color.White, fontWeight = FontWeight.Bold)
+                                        Text(
+                                            text = if (isSaving) "Guardando..." else "Guardar",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
@@ -336,7 +494,7 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
-            
+            // ... (Consejo) ...
             item {
                 Card(
                     shape = RoundedCornerShape(20.dp),
@@ -361,17 +519,18 @@ fun NewVoiceNoteScreen(onBackClick: () -> Unit) {
                         )
                     }
                 }
-                 Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
+// Modificar Previews
 @Preview(showBackground = true)
 @Composable
 fun NewTextNoteScreenPreview() {
     NotaudioTheme {
-        NewTextNoteScreen(onBackClick = {})
+        NewTextNoteScreen(onNavigateBack = {})
     }
 }
 
@@ -379,6 +538,6 @@ fun NewTextNoteScreenPreview() {
 @Composable
 fun NewVoiceNoteScreenPreview() {
     NotaudioTheme {
-        NewVoiceNoteScreen(onBackClick = {})
+        NewVoiceNoteScreen(onNavigateBack = {})
     }
 }

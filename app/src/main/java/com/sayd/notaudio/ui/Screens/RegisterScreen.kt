@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,19 +40,34 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.sayd.notaudio.ui.theme.NotaudioTheme
+import com.sayd.notaudio.viewmodel.AuthViewModel
+import org.koin.androidx.compose.koinViewModel
+import androidx.compose.runtime.LaunchedEffect
+import com.sayd.notaudio.ui.login.LoginScreen
 
 @Composable
-fun RegisterScreen(navController: NavController) {
+fun RegisterScreen(
+    onRegistrationSuccess: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
+    val authViewModel: AuthViewModel = koinViewModel()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val errorMessage by authViewModel.errorMessage.collectAsState()
+
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
+            onRegistrationSuccess()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -122,13 +138,8 @@ fun RegisterScreen(navController: NavController) {
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
-                    val image = if (passwordVisible)
-                        Icons.Filled.Visibility
-                    else
-                        Icons.Filled.VisibilityOff
-
+                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     val description = if (passwordVisible) "Hide password" else "Show password"
-
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(imageVector = image, description)
                     }
@@ -148,13 +159,8 @@ fun RegisterScreen(navController: NavController) {
                 visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
-                    val image = if (confirmPasswordVisible)
-                        Icons.Filled.Visibility
-                    else
-                        Icons.Filled.VisibilityOff
-
+                    val image = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     val description = if (confirmPasswordVisible) "Hide password" else "Show password"
-
                     IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                         Icon(imageVector = image, description)
                     }
@@ -165,13 +171,18 @@ fun RegisterScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(24.dp))
+
             Button(
-                onClick = { navController.navigate("home") },
+                onClick = {
+                    if (password.length >= 6 && password == confirmPassword) {
+                        authViewModel.register(email, password)
+                    } else {
+                        // Aquí deberías mostrar un mensaje de error o usar el errorMessage
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues()
             ) {
                 Box(
@@ -187,13 +198,12 @@ fun RegisterScreen(navController: NavController) {
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
+
             Button(
-                onClick = { navController.navigate("login") },
+                onClick = onNavigateToLogin,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues()
             ) {
                 Box(
@@ -208,6 +218,14 @@ fun RegisterScreen(navController: NavController) {
                     Text(text = "Ya tengo cuenta", color = Color.White)
                 }
             }
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage!!,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }
@@ -216,6 +234,6 @@ fun RegisterScreen(navController: NavController) {
 @Composable
 fun RegisterScreenPreview() {
     NotaudioTheme {
-        RegisterScreen(rememberNavController())
+        RegisterScreen(onRegistrationSuccess = {}, onNavigateToLogin = {})
     }
 }

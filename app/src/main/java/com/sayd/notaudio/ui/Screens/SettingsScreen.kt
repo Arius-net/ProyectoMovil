@@ -3,7 +3,6 @@ package com.sayd.notaudio.ui.Screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -22,12 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Button
@@ -63,15 +60,30 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.sayd.notaudio.ui.theme.NotaudioTheme
+import com.sayd.notaudio.viewmodel.AuthViewModel
+import com.sayd.notaudio.viewmodel.HomeViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SettingsScreen(navController: NavController) {
+fun SettingsScreen(
+    onNavigateBack: () -> Unit,
+    onLogout: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToReminders: () -> Unit,
+    onNavigateToAllNotes: () -> Unit
+) {
+    val homeViewModel: HomeViewModel = koinViewModel()
+    val authViewModel: AuthViewModel = koinViewModel()
+
     Scaffold(
         containerColor = Color(0xFFF0F0F0),
-        bottomBar = { SettingsBottomNavigationBar(navController) }
+        bottomBar = { SettingsBottomNavigationBar(
+            onNavigateToHome = onNavigateToHome,
+            onNavigateToReminders = onNavigateToReminders,
+            onNavigateToAllNotes = onNavigateToAllNotes,
+            onNavigateToSettings = { /* Ya estamos aquí */ }
+        ) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -94,20 +106,20 @@ fun SettingsScreen(navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }
-            item { UserProfileCard() }
+            item { UserProfileCard(onLogout = onLogout, authViewModel = authViewModel) }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { PreferencesCard() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { InformationCard() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { DangerZoneCard() }
+            item { DangerZoneCard(homeViewModel, authViewModel, onLogout) }
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
 
 @Composable
-fun UserProfileCard() {
+fun UserProfileCard(onLogout: () -> Unit, authViewModel: AuthViewModel) {
     var name by remember { mutableStateOf(TextFieldValue("")) }
     var email by remember { mutableStateOf(TextFieldValue("")) }
 
@@ -160,14 +172,14 @@ fun UserProfileCard() {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Button(
-                onClick = { /* TODO: Handle save */ },
+                onClick = {
+                    // Lógica para guardar cambios de perfil
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
                 shape = RoundedCornerShape(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 contentPadding = PaddingValues()
             ) {
                 Box(
@@ -265,7 +277,7 @@ fun InformationCard() {
 }
 
 @Composable
-fun DangerZoneCard() {
+fun DangerZoneCard(homeViewModel: HomeViewModel, authViewModel: AuthViewModel, onLogout: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -277,18 +289,23 @@ fun DangerZoneCard() {
             Text("Zona de Peligro", color = Color.Red, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
-                onClick = { /* TODO: Handle delete all notes */ },
+                onClick = {
+                    // Lógica para eliminar todas las notas y cerrar sesión
+                    // homeViewModel.deleteAllNotes() // Si implementas este método
+                    authViewModel.logout()
+                    onLogout()
+                },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(1.dp, Color.Red)
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Eliminar todas las notas", color = Color.Red)
+                Text("Eliminar todas las notas y cerrar sesión", color = Color.Red)
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                "Esta acción no se puede deshacer",
+                "Esta acción es irreversible y cierra tu sesión",
                 color = Color.Gray,
                 fontSize = 12.sp,
                 modifier = Modifier.fillMaxWidth(),
@@ -328,7 +345,12 @@ fun PreferenceItem(
 }
 
 @Composable
-fun SettingsBottomNavigationBar(navController: NavController) {
+fun SettingsBottomNavigationBar(
+    onNavigateToHome: () -> Unit,
+    onNavigateToReminders: () -> Unit,
+    onNavigateToAllNotes: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
     var selectedIndex by remember { mutableStateOf(3) }
     NavigationBar(
         containerColor = Color.White,
@@ -338,9 +360,9 @@ fun SettingsBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Home, contentDescription = null) },
             label = { Text("Inicio") },
             selected = selectedIndex == 0,
-            onClick = { 
+            onClick = {
                 selectedIndex = 0
-                navController.navigate("home") 
+                onNavigateToHome()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -354,9 +376,9 @@ fun SettingsBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
             label = { Text("Recordatorios") },
             selected = selectedIndex == 1,
-            onClick = { 
+            onClick = {
                 selectedIndex = 1
-                navController.navigate("reminders")
+                onNavigateToReminders()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -370,9 +392,9 @@ fun SettingsBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Description, contentDescription = null) },
             label = { Text("Notas") },
             selected = selectedIndex == 2,
-            onClick = { 
+            onClick = {
                 selectedIndex = 2
-                navController.navigate("all_notes")
+                onNavigateToAllNotes()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -386,9 +408,9 @@ fun SettingsBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Person, contentDescription = null) },
             label = { Text("Perfil") },
             selected = selectedIndex == 3,
-            onClick = { 
+            onClick = {
                 selectedIndex = 3
-                navController.navigate("settings")
+                onNavigateToSettings()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -405,6 +427,12 @@ fun SettingsBottomNavigationBar(navController: NavController) {
 @Composable
 fun SettingsScreenPreview() {
     NotaudioTheme {
-        SettingsScreen(rememberNavController())
+        SettingsScreen(
+            onNavigateBack = {},
+            onLogout = {},
+            onNavigateToHome = {},
+            onNavigateToReminders = {},
+            onNavigateToAllNotes = {}
+        )
     }
 }

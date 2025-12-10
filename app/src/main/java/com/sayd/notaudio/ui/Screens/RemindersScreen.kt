@@ -28,15 +28,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.sayd.notaudio.ui.theme.NotaudioTheme
 
 @Composable
-fun RemindersScreen(navController: NavController) {
+fun RemindersScreen(
+    onNavigateBack: () -> Unit,
+    onNavigateToHome: () -> Unit,
+    onNavigateToAllNotes: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
     Scaffold(
         containerColor = Color(0xFFF0F0F0),
-        bottomBar = { RemindersBottomNavigationBar(navController) }
+        bottomBar = { RemindersBottomNavigationBar(
+            onNavigateToHome = onNavigateToHome,
+            onNavigateToReminders = { /* Ya estamos aquí */ },
+            onNavigateToAllNotes = onNavigateToAllNotes,
+            onNavigateToSettings = onNavigateToSettings
+        ) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -63,7 +71,12 @@ fun RemindersScreen(navController: NavController) {
 }
 
 @Composable
-fun RemindersBottomNavigationBar(navController: NavController) {
+fun RemindersBottomNavigationBar(
+    onNavigateToHome: () -> Unit,
+    onNavigateToReminders: () -> Unit,
+    onNavigateToAllNotes: () -> Unit,
+    onNavigateToSettings: () -> Unit
+) {
     var selectedIndex by remember { mutableStateOf(1) }
     NavigationBar(
         containerColor = Color.White,
@@ -73,9 +86,9 @@ fun RemindersBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Home, contentDescription = null) },
             label = { Text("Inicio") },
             selected = selectedIndex == 0,
-            onClick = { 
+            onClick = {
                 selectedIndex = 0
-                navController.navigate("home") 
+                onNavigateToHome()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -89,9 +102,9 @@ fun RemindersBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
             label = { Text("Recordatorios") },
             selected = selectedIndex == 1,
-            onClick = { 
+            onClick = {
                 selectedIndex = 1
-                navController.navigate("reminders")
+                onNavigateToReminders()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -105,9 +118,9 @@ fun RemindersBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Description, contentDescription = null) },
             label = { Text("Notas") },
             selected = selectedIndex == 2,
-            onClick = { 
+            onClick = {
                 selectedIndex = 2
-                navController.navigate("all_notes")
+                onNavigateToAllNotes()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -121,9 +134,9 @@ fun RemindersBottomNavigationBar(navController: NavController) {
             icon = { Icon(Icons.Filled.Person, contentDescription = null) },
             label = { Text("Perfil") },
             selected = selectedIndex == 3,
-            onClick = { 
+            onClick = {
                 selectedIndex = 3
-                navController.navigate("settings")
+                onNavigateToSettings()
             },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = Color(0xFF6A1B9A),
@@ -140,6 +153,6 @@ fun RemindersBottomNavigationBar(navController: NavController) {
 @Composable
 fun RemindersScreenPreview() {
     NotaudioTheme {
-        RemindersScreen(rememberNavController())
+        RemindersScreen(onNavigateBack = {}, onNavigateToHome = {}, onNavigateToAllNotes = {}, onNavigateToSettings = {})
     }
 }
