@@ -35,6 +35,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,6 +57,8 @@ import com.sayd.notaudio.ui.theme.NotaudioTheme
 
 @Composable
 fun HomeScreen(navController: NavController) {
+    var searchQuery by remember { mutableStateOf("") }
+
     Scaffold(
         containerColor = Color(0xFFF0F0F0),
         bottomBar = { BottomNavigationBar(navController) }
@@ -94,7 +97,18 @@ fun HomeScreen(navController: NavController) {
             }
 
             item {
-                SearchBar()
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Buscar notas...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    shape = RoundedCornerShape(50.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
+                )
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
@@ -196,7 +210,11 @@ fun SearchBar() {
         modifier = Modifier.fillMaxWidth(),
         placeholder = { Text("Buscar notas...") },
         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-        shape = RoundedCornerShape(50.dp)
+        shape = RoundedCornerShape(50.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black
+        )
     )
 }
 
