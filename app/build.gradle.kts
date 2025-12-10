@@ -60,14 +60,14 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     //My dependencies
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation(libs.androidx.material3)
+    implementation(libs.material.icons.extended)
+    implementation(libs.coil.compose)
     // Firebase Core y Authentication
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
 
     // Y otras que usarás: Firestore y Cloud Functions
-    implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-functions-ktx")
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.functions.ktx)
 }
