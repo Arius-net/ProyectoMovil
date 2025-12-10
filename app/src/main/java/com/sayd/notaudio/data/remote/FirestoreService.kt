@@ -1,5 +1,6 @@
 package com.sayd.notaudio.data.remote
 
+import com.google.firebase.Firebase
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.ktx.toObjects
@@ -47,5 +48,12 @@ class FirestoreService {
             .whereLessThanOrEqualTo("titulo", query + '\uf8ff') // Técnica de búsqueda por prefijo
             .snapshots()
             .map { it.toObjects<Nota>() }
+    }
+    // NUEVA FUNCIÓN: Actualiza el campo de recordatorio para una nota existente (RF2)
+    suspend fun updateReminderDate(noteId: String, newTimestamp: Long) {
+        // Usa la ID del documento (noteId) para hacer un update
+        notasCollection.document(noteId)
+            .update("fechaRecordatorio", newTimestamp)
+            .await()
     }
 }
