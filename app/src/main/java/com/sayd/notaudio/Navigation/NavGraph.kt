@@ -9,6 +9,7 @@ import com.sayd.notaudio.ui.Screens.HomeScreen
 import com.sayd.notaudio.ui.Screens.NewTextNoteScreen
 import com.sayd.notaudio.ui.Screens.NewVoiceNoteScreen
 import com.sayd.notaudio.ui.Screens.RegisterScreen
+import com.sayd.notaudio.ui.Screens.RemindersScreen
 import com.sayd.notaudio.ui.Screens.SettingsScreen
 import com.sayd.notaudio.ui.login.LoginScreen
 
@@ -17,16 +18,16 @@ fun NavGraph() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = "login") {
         composable("login") {
-            LoginScreen()
+            LoginScreen(navController = navController)
         }
         composable("register") {
-            RegisterScreen()
+            RegisterScreen(navController = navController)
         }
         composable("home") {
-            HomeScreen()
+            HomeScreen(navController = navController)
         }
         composable("settings") {
-            SettingsScreen()
+            SettingsScreen(navController = navController)
         }
         composable("all_notes") {
             AllNotesScreen(navController = navController)
@@ -36,6 +37,9 @@ fun NavGraph() {
         }
         composable("new_voice_note") {
             NewVoiceNoteScreen(onBackClick = { navController.popBackStack() })
+        }
+        composable("reminders") {
+            RemindersScreen(navController = navController)
         }
     }
 }

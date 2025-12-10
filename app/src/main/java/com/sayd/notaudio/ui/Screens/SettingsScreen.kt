@@ -2,7 +2,6 @@ package com.sayd.notaudio.ui.Screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
@@ -63,21 +63,37 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.sayd.notaudio.ui.theme.NotaudioTheme
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavController) {
     Scaffold(
-        bottomBar = { AppBottomNavigationBar() }
+        containerColor = Color(0xFFF0F0F0),
+        bottomBar = { SettingsBottomNavigationBar(navController) }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF0F0F8))
+                .padding(horizontal = 16.dp)
         ) {
-            item { Header() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+                Text(
+                    text = "Configuración",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF6A1B9A)
+                )
+                Text(
+                    text = "Personaliza tu experiencia",
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
             item { UserProfileCard() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { PreferencesCard() }
@@ -85,34 +101,7 @@ fun SettingsScreen() {
             item { InformationCard() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { DangerZoneCard() }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
-        }
-    }
-}
-
-@Composable
-fun Header() {
-    val gradientBrush = Brush.horizontalGradient(
-        colors = listOf(Color(0xFF6A11CB), Color(0xFF2575FC))
-    )
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(brush = gradientBrush)
-            .padding(16.dp)
-    ) {
-        Column {
-            Text(
-                text = "Configuración",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Personaliza tu experiencia",
-                color = Color.White.copy(alpha = 0.8f),
-                fontSize = 16.sp
-            )
+            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
@@ -124,11 +113,9 @@ fun UserProfileCard() {
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -144,40 +131,32 @@ fun UserProfileCard() {
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text("Usuario", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Text("Sin correo", color = Color.Black, fontSize = 14.sp)
+                    Text("Sin correo", fontSize = 14.sp, color = Color.Gray)
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
-            Text("Nombre", color = Color.Gray, fontSize = 12.sp)
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                placeholder = { Text("Tu nombre") },
-                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                label = { Text("Tu nombre") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(50.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFF0F0F8),
-                    focusedContainerColor = Color(0xFFF0F0F8),
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color(0xFF6200EE)
-                ),
-                shape = RoundedCornerShape(8.dp)
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Correo electrónico", color = Color.Black, fontSize = 12.sp)
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("tu@email.com") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                label = { Text("tu@email.com") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(50.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = Color(0xFFF0F0F8),
-                    focusedContainerColor = Color(0xFFF0F0F8),
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color(0xFF6200EE)
-                ),
-                shape = RoundedCornerShape(8.dp)
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
             )
             Spacer(modifier = Modifier.height(24.dp))
             Button(
@@ -185,9 +164,9 @@ fun UserProfileCard() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent // Usamos transparente para que el fondo sea el gradiente
+                    containerColor = Color.Transparent
                 ),
                 contentPadding = PaddingValues()
             ) {
@@ -196,7 +175,7 @@ fun UserProfileCard() {
                         .fillMaxSize()
                         .background(
                             brush = Brush.horizontalGradient(
-                                colors = listOf(Color(0xFF6A11CB), Color(0xFF2575FC))
+                                colors = listOf(Color(0xFF8E24AA), Color(0xFF42A5F5))
                             )
                         ),
                     contentAlignment = Alignment.Center
@@ -214,14 +193,12 @@ fun PreferencesCard() {
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Preferencias", fontWeight = FontWeight.Black, fontSize = 18.sp)
+            Text("Preferencias", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Spacer(modifier = Modifier.height(16.dp))
             PreferenceItem(
                 icon = Icons.Outlined.Notifications,
@@ -233,7 +210,7 @@ fun PreferencesCard() {
                     onCheckedChange = { notificationsEnabled = it },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = Color.Black
+                        checkedTrackColor = Color(0xFF6A1B9A)
                     )
                 )
             }
@@ -253,17 +230,14 @@ fun PreferencesCard() {
     }
 }
 
-
 @Composable
 fun InformationCard() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
             .clickable { /* TODO: Navigate to About screen */ },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -294,11 +268,9 @@ fun InformationCard() {
 fun DangerZoneCard() {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F0)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         border = BorderStroke(1.dp, Color(0xFFFFCDCD))
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -307,7 +279,7 @@ fun DangerZoneCard() {
             OutlinedButton(
                 onClick = { /* TODO: Handle delete all notes */ },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(50.dp),
                 border = BorderStroke(1.dp, Color.Red)
             ) {
                 Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red)
@@ -341,10 +313,10 @@ fun PreferenceItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFE3F2FD)),
+                .background(Color(0xFFF3E5F5)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = Color(0xFF2575FC))
+            Icon(icon, contentDescription = null, tint = Color(0xFF6A1B9A))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -356,49 +328,83 @@ fun PreferenceItem(
 }
 
 @Composable
-fun AppBottomNavigationBar() {
+fun SettingsBottomNavigationBar(navController: NavController) {
+    var selectedIndex by remember { mutableStateOf(3) }
     NavigationBar(
         containerColor = Color.White,
         tonalElevation = 8.dp
     ) {
-        // En un proyecto real, el índice seleccionado vendría de un NavController
-        val selectedIndex = 3
         NavigationBarItem(
+            icon = { Icon(Icons.Filled.Home, contentDescription = null) },
+            label = { Text("Inicio") },
             selected = selectedIndex == 0,
-            onClick = { /* Navigate to Home */ },
-            icon = { Icon(Icons.Default.Home, contentDescription = "Inicio") },
-            label = { Text("Inicio") }
-        )
-        NavigationBarItem(
-            selected = selectedIndex == 1,
-            onClick = { /* Navigate to Reminders */ },
-            icon = { Icon(Icons.Outlined.Notifications, contentDescription = "Recordatorios") },
-            label = { Text("Recordatorios") }
-        )
-        NavigationBarItem(
-            selected = selectedIndex == 2,
-            onClick = { /* Navigate to Notes */ },
-            icon = { Icon(Icons.Outlined.Book, contentDescription = "Notas") },
-            label = { Text("Notas") }
-        )
-        NavigationBarItem(
-            selected = selectedIndex == 3,
-            onClick = { /* Already on Profile */ },
-            icon = { Icon(Icons.Default.Person, contentDescription = "Perfil") },
-            label = { Text("Perfil") },
+            onClick = { 
+                selectedIndex = 0
+                navController.navigate("home") 
+            },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color(0xFF6200EE),
-                selectedTextColor = Color(0xFF6200EE),
-                indicatorColor = Color(0xFFEDE7F6)
+                selectedIconColor = Color(0xFF6A1B9A),
+                selectedTextColor = Color(0xFF6A1B9A),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color(0xFFF3E5F5)
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Notifications, contentDescription = null) },
+            label = { Text("Recordatorios") },
+            selected = selectedIndex == 1,
+            onClick = { 
+                selectedIndex = 1
+                navController.navigate("reminders")
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF6A1B9A),
+                selectedTextColor = Color(0xFF6A1B9A),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color(0xFFF3E5F5)
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Description, contentDescription = null) },
+            label = { Text("Notas") },
+            selected = selectedIndex == 2,
+            onClick = { 
+                selectedIndex = 2
+                navController.navigate("all_notes")
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF6A1B9A),
+                selectedTextColor = Color(0xFF6A1B9A),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color(0xFFF3E5F5)
+            )
+        )
+        NavigationBarItem(
+            icon = { Icon(Icons.Filled.Person, contentDescription = null) },
+            label = { Text("Perfil") },
+            selected = selectedIndex == 3,
+            onClick = { 
+                selectedIndex = 3
+                navController.navigate("settings")
+            },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = Color(0xFF6A1B9A),
+                selectedTextColor = Color(0xFF6A1B9A),
+                unselectedIconColor = Color.Gray,
+                unselectedTextColor = Color.Gray,
+                indicatorColor = Color(0xFFF3E5F5)
             )
         )
     }
 }
 
-@Preview(showBackground = true, device = "id:pixel_4")
+@Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
     NotaudioTheme {
-        SettingsScreen()
+        SettingsScreen(rememberNavController())
     }
 }
