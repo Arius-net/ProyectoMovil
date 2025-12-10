@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.sayd.notaudio.navigation.Screen
 import com.sayd.notaudio.ui.Screens.*
 import com.sayd.notaudio.ui.login.LoginScreen
 import com.sayd.notaudio.viewmodel.AuthViewModel
@@ -15,13 +16,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun NavGraph() {
 
-    // 1. Obtener el AuthViewModel inyectado por Koin
     val authViewModel: AuthViewModel = koinViewModel()
 
-    // 2. Observar el estado de autenticación de Firebase
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
 
-    // 3. Decidir el destino inicial: Home si está autenticado, Login si no
     val startDestination = remember(isAuthenticated) {
         if (isAuthenticated) Screen.Home.route else Screen.Login.route
     }
@@ -33,25 +31,20 @@ fun NavGraph() {
         startDestination = startDestination
     ) {
 
-        // --- RUTA DE LOGIN ---
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    // Redirige a Home y limpia la pila para evitar volver al Login
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 },
-                // Navegar a Registro
                 onNavigateToRegister = { navController.navigate(Screen.Register.route) }
             )
         }
 
-        // --- RUTA DE REGISTRO ---
         composable(Screen.Register.route) {
             RegisterScreen(
                 onRegistrationSuccess = {
-                    // Redirige a Home después del registro exitoso
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Register.route) { inclusive = true }
                     }
@@ -64,17 +57,13 @@ fun NavGraph() {
             )
         }
 
-        // --- RUTA PRINCIPAL (HOME) ---
         composable(Screen.Home.route) {
             HomeScreen(
-                // Callback de cierre de sesión
                 onLogout = {
-                    // Cierra sesión y redirige a Login
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
-                // Navegaciones desde Home a otras pantallas
                 onNavigateToNewTextNote = { navController.navigate(Screen.NewTextNote.route) },
                 onNavigateToNewVoiceNote = { navController.navigate(Screen.NewVoiceNote.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
@@ -83,24 +72,15 @@ fun NavGraph() {
             )
         }
 
-        // --- RUTAS DE NOTAS ---
         composable(Screen.NewTextNote.route) {
             NewTextNoteScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
         composable(Screen.NewVoiceNote.route) {
             NewVoiceNoteScreen(
-                onNavigateBack = {
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
-                    }
-                }
+                onNavigateBack = { navController.popBackStack() }
             )
         }
 
@@ -123,8 +103,13 @@ fun NavGraph() {
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToHome = { navController.navigate(Screen.Home.route) },
                 onNavigateToAllNotes = { navController.navigate(Screen.AllNotes.route) },
-                onNavigateToSettings = { navController.navigate(Screen.Settings.route) }
+                onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToNewReminder = { navController.navigate(Screen.NewReminder.route) }
             )
+        }
+
+        composable(Screen.NewReminder.route) {
+            NewReminderScreen(navController = navController)
         }
 
         composable(Screen.AllNotes.route) {

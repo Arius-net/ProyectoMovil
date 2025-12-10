@@ -274,9 +274,6 @@ fun NewVoiceNoteScreen(onNavigateBack: () -> Unit) {
                 notificationHelper.showNotification("Error", error)
                 shouldNavigateBack = false
             }
-        }
-    }
-
     // Solicitar permisos
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()

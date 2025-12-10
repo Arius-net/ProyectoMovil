@@ -41,10 +41,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.sayd.notaudio.ui.theme.NotaudioTheme
 import com.sayd.notaudio.viewmodel.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.runtime.LaunchedEffect
+import com.sayd.notaudio.ui.theme.NotaudioTheme
 
 @Composable
 fun LoginScreen(
@@ -53,11 +53,10 @@ fun LoginScreen(
 ) {
     val authViewModel: AuthViewModel = koinViewModel()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-    val errorMessage by authViewModel.errorMessage.collectAsState()
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(isAuthenticated) {
         if (isAuthenticated) {
@@ -138,7 +137,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { authViewModel.login(email, password) },
+                onClick = { authViewModel.login(email, password, onLoginSuccess) { err -> errorMessage = err } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(50.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -177,9 +176,9 @@ fun LoginScreen(
                     Text(text = "Registrarse", color = Color.White)
                 }
             }
-            if (errorMessage != null) {
+            errorMessage?.let {
                 Text(
-                    text = errorMessage!!,
+                    text = it,
                     color = Color.Red,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(top = 8.dp)

@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.sayd.notaudio" />
+                  <option name="mobileSdkAppId" value="1:5431963330:android:358fcd2fd19650ee27d55b" />
+                  <option name="projectId" value="notapp-b4cb5" />
+                  <option name="projectNumber" value="5431963330" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

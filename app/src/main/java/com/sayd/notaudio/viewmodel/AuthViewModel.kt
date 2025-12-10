@@ -2,48 +2,47 @@ package com.sayd.notaudio.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sayd.notaudio.data.remote.AuthService
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class AuthViewModel(private val authService: AuthService) : ViewModel() {
+class AuthViewModel : ViewModel() {
 
-    // Estado para saber si el usuario está autenticado
-    private val _isAuthenticated = MutableStateFlow(authService.getCurrentUserId() != null)
-    val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
+    private val auth: FirebaseAuth = Firebase.auth
 
-    // Estado para manejar mensajes de error en la UI
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
+    private val _isAuthenticated = MutableStateFlow(auth.currentUser != null)
+    val isAuthenticated = _isAuthenticated.asStateFlow()
 
-    fun register(email: String, password: String) {
+    fun login(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                authService.register(email, password).await()
+                auth.signInWithEmailAndPassword(email, password).await()
                 _isAuthenticated.value = true
-                _errorMessage.value = null
+                onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = e.message
+                onError(e.message ?: "Error desconocido")
             }
         }
     }
 
-    fun login(email: String, password: String) {
+    fun register(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                authService.login(email, password).await()
+                auth.createUserWithEmailAndPassword(email, password).await()
                 _isAuthenticated.value = true
-                _errorMessage.value = null
+                onSuccess()
             } catch (e: Exception) {
-                _errorMessage.value = "Error de inicio de sesión. Verifique credenciales."
+                onError(e.message ?: "Error desconocido")
             }
         }
     }
 
     fun logout() {
-        authService.logout()
+        auth.signOut()
         _isAuthenticated.value = false
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
@@ -62,7 +63,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sayd.notaudio.ui.theme.NotaudioTheme
 import com.sayd.notaudio.viewmodel.AuthViewModel
-import com.sayd.notaudio.viewmodel.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -73,7 +73,6 @@ fun SettingsScreen(
     onNavigateToReminders: () -> Unit,
     onNavigateToAllNotes: () -> Unit
 ) {
-    val homeViewModel: HomeViewModel = koinViewModel()
     val authViewModel: AuthViewModel = koinViewModel()
 
     Scaffold(
@@ -112,7 +111,7 @@ fun SettingsScreen(
             item { Spacer(modifier = Modifier.height(16.dp)) }
             item { InformationCard() }
             item { Spacer(modifier = Modifier.height(16.dp)) }
-            item { DangerZoneCard(homeViewModel, authViewModel, onLogout) }
+            item { DangerZoneCard(authViewModel, onLogout) }
             item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
@@ -277,7 +276,7 @@ fun InformationCard() {
 }
 
 @Composable
-fun DangerZoneCard(homeViewModel: HomeViewModel, authViewModel: AuthViewModel, onLogout: () -> Unit) {
+fun DangerZoneCard(authViewModel: AuthViewModel, onLogout: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -290,8 +289,6 @@ fun DangerZoneCard(homeViewModel: HomeViewModel, authViewModel: AuthViewModel, o
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedButton(
                 onClick = {
-                    // Lógica para eliminar todas las notas y cerrar sesión
-                    // homeViewModel.deleteAllNotes() // Si implementas este método
                     authViewModel.logout()
                     onLogout()
                 },

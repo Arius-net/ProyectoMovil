@@ -40,12 +40,12 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.sayd.notaudio.ui.theme.NotaudioTheme
 import com.sayd.notaudio.viewmodel.AuthViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.runtime.LaunchedEffect
-import com.sayd.notaudio.ui.login.LoginScreen
 
 @Composable
 fun RegisterScreen(
@@ -54,14 +54,13 @@ fun RegisterScreen(
 ) {
     val authViewModel: AuthViewModel = koinViewModel()
     val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
-    val errorMessage by authViewModel.errorMessage.collectAsState()
-
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(isAuthenticated) {
         if (isAuthenticated) {
@@ -175,9 +174,9 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     if (password.length >= 6 && password == confirmPassword) {
-                        authViewModel.register(email, password)
+                        authViewModel.register(email, password, onRegistrationSuccess) { err -> errorMessage = err }
                     } else {
-                        // Aquí deberías mostrar un mensaje de error o usar el errorMessage
+                        errorMessage = "Las contraseñas no coinciden o son demasiado cortas."
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -218,9 +217,9 @@ fun RegisterScreen(
                     Text(text = "Ya tengo cuenta", color = Color.White)
                 }
             }
-            if (errorMessage != null) {
+            errorMessage?.let {
                 Text(
-                    text = errorMessage!!,
+                    text = it,
                     color = Color.Red,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(top = 8.dp)
