@@ -16,6 +16,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             NotaudioTheme {
+                ConfiguracionScreen()
+            }
+        }
+    }
+}
                 LoginScreen()
             }
         }
